@@ -43,6 +43,7 @@ class IglePlot(Igle):
         plt.xlabel("$t$")
         plt.ylabel("$\\langle vv\\rangle$")
         plt.title("Velocity autocorrelation function")
+        plt.show(block=False)
 
         plt.figure()
         plt.plot(self.corrs.index,self.corrs["va"])
@@ -50,6 +51,7 @@ class IglePlot(Igle):
         plt.xlabel("$t$")
         plt.ylabel("$\\langle va\\rangle$")
         plt.title("Velocity acceleration correlation function")
+        plt.show(block=False)
 
         plt.figure()
         plt.plot(self.corrs.index,self.corrs["aa"])
@@ -57,6 +59,8 @@ class IglePlot(Igle):
         plt.xlabel("$t$")
         plt.ylabel("$\\langle aa\\rangle$")
         plt.title("Acceleration autocorrelation function")
+        plt.show(block=False)
+
 
     def plot_au_corr(self):
         plt.figure()
@@ -65,7 +69,7 @@ class IglePlot(Igle):
         plt.xlabel("$t$")
         plt.ylabel("$\\langle a\\nabla U\\rangle$")
         plt.title("$\\langle a\\nabla U\\rangle$ correlation function")
-
+        plt.show(block=False)
 
     def plot_fe(self, nxfine=1000):
         plt.figure()
@@ -80,6 +84,7 @@ class IglePlot(Igle):
         plt.xlabel("$x$")
         plt.ylabel("$F$ [kT]")
         plt.title("Free energy")
+        plt.show(block=False)
 
     def plot_kernel(self):
         plt.figure()
@@ -88,3 +93,4 @@ class IglePlot(Igle):
         plt.xlabel("$t$")
         plt.ylabel("$\\Gamma$")
         plt.title("Memory kernel")
+        plt.show(block=False)
