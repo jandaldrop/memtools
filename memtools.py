@@ -3,11 +3,12 @@ import numpy as np
 import pandas as pd
 import mdtraj
 from igle import *
+from igleplot import *
 from correlation import *
 
 
 def ver():
-    print("This is memtools version 0.52")
+    print("This is memtools version 0.6")
 
 
 def xframe(x,time,round_time=1.e-4,fix_time=True,dt=-1):
