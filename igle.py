@@ -7,7 +7,7 @@ from scipy import interpolate
 from scipy.integrate import cumtrapz
 import ckernel
 
-class Igle:
+class Igle(object):
     def __init__(self,xva_arg,saveall=True,prefix="",verbose=True,kT=2.494,trunc=1.,__override_time_check__=False):
         """ xva_arg should be either a pandas timeseries or an iterable collection (i.e. list) of them. """
         if isinstance(xva_arg,pd.DataFrame):
@@ -31,6 +31,7 @@ class Igle:
         self.kernelfile="kernel.txt"
 
         self.corrs=None
+        self.aucorr=None
         self.mass=None
         self.fe_spline=None
         self.fe=None
