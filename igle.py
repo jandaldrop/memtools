@@ -33,6 +33,7 @@ class Igle:
         self.corrs=None
         self.mass=None
         self.fe_spline=None
+        self.fe=None
         self.per=False
 
         # processing input arguments
@@ -102,6 +103,7 @@ class Igle:
         fe=-np.log(pf[np.nonzero(pf)])
 
         self.fe_spline= interpolate.splrep(xf, fe, s=0, per=self.per)
+        self.fe=pd.DataFrame({"F":fe},index=xf)
 
         if self.saveall:
             dxf=xf[1]-xf[0]
