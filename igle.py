@@ -17,7 +17,7 @@ class Igle(object):
         for xva in self.xva_list:
             for col in ['t','x','v','a']:
                 if col not in xva.columns:
-                    raise Exception("Please provide txva data frame, or an iterable collcetion (i.e. list) of txva data frames. And not some other shit.")
+                    raise Exception("Please provide txva data frame, or an iterable collection (i.e. list) of txva data frames. And not some other shit.")
         self.saveall=saveall
         self.prefix=prefix
         self.verbose=verbose
