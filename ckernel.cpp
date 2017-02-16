@@ -207,8 +207,49 @@ static struct PyMethodDef methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
-PyMODINIT_FUNC initckernel (void)
+
+#if PY_MAJOR_VERSION >= 3
+#define GETSTATE(m) ((struct module_state*)PyModule_GetState(m))
+
+struct module_state {
+    PyObject *error;
+};
+
+static int module_traverse(PyObject *m, visitproc visit, void *arg) {
+    Py_VISIT(GETSTATE(m)->error);
+    return 0;
+}
+
+static int module_clear(PyObject *m) {
+    Py_CLEAR(GETSTATE(m)->error);
+    return 0;
+}
+
+
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "methods",
+        NULL,
+        sizeof(struct module_state),
+        methods,
+        NULL,
+        module_traverse,
+        module_clear,
+        NULL
+};
+#endif
+
+PyMODINIT_FUNC
+#if PY_MAJOR_VERSION >= 3
+PyInit_ckernel (void)
+#else
+initckernel (void)
+#endif
 {
-    (void)Py_InitModule("ckernel", methods);
+    #if PY_MAJOR_VERSION >= 3
     import_array();
+    return PyModule_Create(&moduledef);
+    #else
+    (void)Py_InitModule("ckernel", methods);
+    #endif
 }
