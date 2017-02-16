@@ -4,6 +4,7 @@ import pandas as pd
 import mdtraj
 from igle import *
 from igleplot import *
+from igleu import *
 from correlation import *
 
 
