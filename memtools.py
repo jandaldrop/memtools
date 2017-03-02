@@ -8,7 +8,7 @@ from correlation import *
 
 
 def ver():
-    print("This is memtools version 0.66")
+    print("This is memtools version 0.67")
 
 
 def xframe(x, time, round_time=1.e-4, fix_time=True, dt=-1):
@@ -25,7 +25,7 @@ def xframe(x, time, round_time=1.e-4, fix_time=True, dt=-1):
 def compute_a(xvf):
     diffs=xvf.shift(-1)-xvf.shift(1)
     dt=xvf.iloc[1]["t"]-xvf.iloc[0]["t"]
-    xva=pd.DataFrame({"t":xvf["t"],"x":xvf["x"],"v":xvf["v"],"a":diffs["v"]/dt},index=xvf.index)
+    xva=pd.DataFrame({"t":xvf["t"],"x":xvf["x"],"v":xvf["v"],"a":diffs["v"]/(2.*dt)},index=xvf.index)
     xva = xva[['t', 'x', 'v', 'a']]
     xva.index.name='#t'
 
