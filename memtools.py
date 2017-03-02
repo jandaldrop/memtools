@@ -8,7 +8,7 @@ from correlation import *
 
 
 def ver():
-    print("This is memtools version 0.65")
+    print("This is memtools version 0.66")
 
 
 def xframe(x, time, round_time=1.e-4, fix_time=True, dt=-1):
@@ -24,7 +24,7 @@ def xframe(x, time, round_time=1.e-4, fix_time=True, dt=-1):
 
 def compute_a(xvf):
     diffs=xvf.shift(-1)-xvf.shift(1)
-    dt=diffs.iloc[1]["t"]-diffs.iloc[0]["t"]
+    dt=xvf.iloc[1]["t"]-xvf.iloc[0]["t"]
     xva=pd.DataFrame({"t":xvf["t"],"x":xvf["x"],"v":xvf["v"],"a":diffs["v"]/dt},index=xvf.index)
     xva = xva[['t', 'x', 'v', 'a']]
     xva.index.name='#t'
@@ -33,7 +33,7 @@ def compute_a(xvf):
 
 def compute_va(xf, correct_jumps=False, jump=360, jump_thr=270):
     diffs=xf-xf.shift(1)
-    dt=diffs.iloc[1]["t"]-diffs.iloc[0]["t"]
+    dt=xf.iloc[1]["t"]-xf.iloc[0]["t"]
     if correct_jumps:
         diffs.loc[diffs["x"] < jump_thr,"x"]+=jump
         diffs.loc[diffs["x"] > jump_thr,"x"]-=jump
