@@ -176,7 +176,7 @@ class Igle(object):
         va_cf=self.corrs["va"].values
         a_acf=self.corrs["aa"].values
         au_cf=self.aucorr["au"].values
-        dt=self.xva_list[0].index[1]-self.xva_list[0].index[0]
+        dt=self.corrs.index[1]-self.corrs.index[0]
 
         if self.verbose:
             print("Use dt:",dt)
