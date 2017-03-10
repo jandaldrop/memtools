@@ -30,6 +30,7 @@ class Igle(object):
         self.histfile="fe-hist.txt"
         self.ucorrfile="u-corr.txt"
         self.kernelfile="kernel.txt"
+        self.kernelfile_1st="kernel_1st.txt"
 
         self.corrs=None
         self.ucorr=None
@@ -218,7 +219,10 @@ class Igle(object):
         self.kernel=pd.DataFrame({"k":kernel,"ik":ikernel},index=self.corrs.index)
         self.kernel=self.kernel[["k","ik"]]
         if self.saveall:
-            self.kernel.to_csv(self.prefix+self.kernelfile,sep=" ")
+            if first_order:
+                self.kernel.to_csv(self.prefix+self.kernelfile_1st,sep=" ")
+            else:
+                self.kernel.to_csv(self.prefix+self.kernelfile,sep=" ")
 
         return self.kernel
 
