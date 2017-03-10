@@ -17,6 +17,6 @@ mymem=Igle(xvaf,trunc=10)
 mymem.compute_corrs()
 mymem.set_periodic()
 mymem.compute_fe()
-mymem.compute_au_corr()
+mymem.compute_u_corr()
 
 mymem.compute_kernel()

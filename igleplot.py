@@ -19,9 +19,13 @@ class IglePlot(Igle):
         return ret
 
     def compute_au_corr(self, *args, **kwargs):
-        ret=super(IglePlot, self).compute_au_corr(*args, **kwargs)
+        print("WARNING: This function has been renamed to compute_u_corr, please change.")
+        self.compute_u_corr(*args, **kwargs)
+
+    def compute_u_corr(self, *args, **kwargs):
+        ret=super(IglePlot, self).compute_u_corr(*args, **kwargs)
         if self.plot:
-            self.plot_au_corr()
+            self.plot_u_corr()
         return ret
 
     def compute_fe(self, *args, **kwargs):
@@ -62,14 +66,22 @@ class IglePlot(Igle):
         plt.show(block=False)
 
 
-    def plot_au_corr(self):
+    def plot_u_corr(self):
         plt.figure()
-        plt.plot(self.aucorr.index,self.aucorr["au"])
+        plt.plot(self.ucorr.index,self.ucorr["au"])
         plt.xscale("log")
         plt.xlabel("$t$")
         plt.ylabel("$\\langle a\\nabla U\\rangle$")
         plt.title("$\\langle a\\nabla U\\rangle$ correlation function")
         plt.show(block=False)
+        if self.first_order:
+            plt.figure()
+            plt.plot(self.ucorr.index,self.ucorr["vu"])
+            plt.xscale("log")
+            plt.xlabel("$t$")
+            plt.ylabel("$\\langle v\\nabla U\\rangle$")
+            plt.title("$\\langle v\\nabla U\\rangle$ correlation function")
+            plt.show(block=False)
 
     def plot_fe(self, nxfine=1000):
         plt.figure()

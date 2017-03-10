@@ -8,7 +8,7 @@ from scipy.integrate import cumtrapz
 import ckernel
 
 class Igle(object):
-    def __init__(self,xva_arg,saveall=True,prefix="",verbose=True,kT=2.494,trunc=1.,__override_time_check__=False):
+    def __init__(self,xva_arg,saveall=True,prefix="",verbose=True,kT=2.494,trunc=1.,__override_time_check__=False,first_order=False):
         """ xva_arg should be either a pandas timeseries or an iterable collection (i.e. list) of them. """
         if isinstance(xva_arg,pd.DataFrame):
             self.xva_list=[xva_arg]
@@ -22,16 +22,17 @@ class Igle(object):
         self.prefix=prefix
         self.verbose=verbose
         self.kT=kT
+        self.first_order=first_order
 
         # filenames
         self.corrsfile="corrs.txt"
         self.interpfefile="interp-fe.txt"
         self.histfile="fe-hist.txt"
-        self.aucorrfile="au-corr.txt"
+        self.ucorrfile="u-corr.txt"
         self.kernelfile="kernel.txt"
 
         self.corrs=None
-        self.aucorr=None
+        self.ucorr=None
         self.mass=None
         self.fe_spline=None
         self.fe=None
@@ -115,32 +116,47 @@ class Igle(object):
             np.savetxt(self.prefix+self.histfile, np.vstack((xfa,pf)).T)
 
 
-    def set_harmonic_au_corr(self,K=0.):
+    def set_harmonic_u_corr(self,K=0.):
         if self.corrs is None:
             raise Exception("Please calculate correlation functions first.")
-        self.aucorr=pd.DataFrame({"au": -K*self.corrs["vv"]},index=self.corrs.index)
+        if self.first_order:
+            raise Exception("Harmonic first order not implemented.")
+        else:
+            self.ucorr=pd.DataFrame({"au": -K*self.corrs["vv"]},index=self.corrs.index)
 
+    def compute_au_corr(self, *args, **kwargs):
+        print("WARNING: This function has been renamed to compute_u_corr, please change.")
+        self.compute_u_corr(*args, **kwargs)
 
-    def compute_au_corr(self):
+    def compute_u_corr(self):
         if self.fe_spline is None:
             raise Exception("Free energy has not been computed.")
         if self.verbose:
-            print("Calculate a grad(U(x)) correlation function...")
+            print("Calculate a/v grad(U(x)) correlation function...")
 
         # get target length from first element and trunc
         ncorr=self.xva_list[0][self.xva_list[0].index < self.trunc].shape[0]
-        self.aucorr=pd.DataFrame({"au":np.zeros(ncorr)}, index=self.xva_list[0][self.xva_list[0].index < self.trunc].index)
+
+
+        self.ucorr=pd.DataFrame({"au":np.zeros(ncorr)}, index=self.xva_list[0][self.xva_list[0].index < self.trunc].index)
+        if self.first_order:
+            self.ucorr["vu"]=np.zeros(ncorr)
 
         for weight,xva in zip(self.weights,self.xva_list):
             x=xva["x"].values
             a=xva["a"].values
             corr=correlation(a,self.dU(x),subtract_mean=False)
-            self.aucorr["au"]+=weight*corr[:ncorr]
+            self.ucorr["au"]+=weight*corr[:ncorr]
 
-        self.aucorr["au"]/=self.weightsum
+            if self.first_order:
+                v=xva["v"].values
+                corr=correlation(v,self.dU(x),subtract_mean=False)
+                self.ucorr["vu"]+=weight*corr[:ncorr]
+
+        self.ucorr/=self.weightsum
 
         if self.saveall:
-            self.aucorr.to_csv(self.prefix+self.aucorrfile,sep=" ")
+            self.ucorr.to_csv(self.prefix+self.ucorrfile,sep=" ")
 
     def compute_corrs(self):
         if self.verbose:
@@ -164,8 +180,12 @@ class Igle(object):
         if self.saveall:
             self.corrs.to_csv(self.prefix+self.corrsfile,sep=" ")
 
-    def compute_kernel(self, use_c=True):
-        if self.corrs is None or self.aucorr is None:
+    def compute_kernel(self, use_c=True, first_order=None):
+        if first_order is None:
+            first_order=self.first_order
+        if first_order and not self.first_order:
+            raise Excpetion("Please initialize in first order mode, which allows both first and second order.")
+        if self.corrs is None or self.ucorr is None:
             raise Exception("Need correlation functions to compute the kernel.")
         if self.mass is None:
             if self.verbose:
@@ -174,40 +194,24 @@ class Igle(object):
 
         v_acf=self.corrs["vv"].values
         va_cf=self.corrs["va"].values
-        a_acf=self.corrs["aa"].values
-        au_cf=self.aucorr["au"].values
         dt=self.corrs.index[1]-self.corrs.index[0]
+
+        if first_order:
+            vu_cf=self.ucorr["vu"].values
+        #else: #at the moment
+        a_acf=self.corrs["aa"].values
+        au_cf=self.ucorr["au"].values
 
         if self.verbose:
             print("Use dt:",dt)
 
         kernel=np.zeros(len(v_acf))
 
-        #use the c++ routine?
-        if use_c:
-            ckernel.ckernel_core(v_acf,va_cf,a_acf*self.mass,au_cf,dt,kernel)
-        #otherwise use python implementation
+        if first_order:
+            ckernel.ckernel_first_order_core(v_acf,va_cf*self.mass,a_acf*self.mass,vu_cf,au_cf,dt,kernel)
         else:
-            def w(j,i):
-                if j==0 or j==i:
-                    return 0.5
-                else:
-                    return 1.
+            ckernel.ckernel_core(v_acf,va_cf,a_acf*self.mass,au_cf,dt,kernel)
 
-            k0=(self.mass*a_acf[0]+au_cf[0])/v_acf[0]
-            if self.verbose:
-                print("k0="+str(k0)+"\n")
-            kernel[0]=k0
-            prefac=1./(v_acf[0]+va_cf[0]*dt*w(0,0))
-
-            for i in range(1,len(kernel)):
-                num=self.mass*a_acf[i]+au_cf[i]
-                for j in range(0,i):
-                    num-=dt*w(j,i)*va_cf[i-j]*kernel[j]
-
-                kernel[i]=prefac*num
-
-        # --- end of calculation ---
 
         ikernel=cumtrapz(kernel,dx=dt,initial=0.)
 
