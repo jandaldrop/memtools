@@ -1,6 +1,7 @@
 from __future__ import print_function
 import numpy as np
 import pandas as pd
+import os.path
 from correlation import *
 from memtools import *
 from scipy import interpolate
@@ -9,15 +10,20 @@ import ckernel
 
 class Igle(object):
     def __init__(self,xva_arg,saveall=True,prefix="",verbose=True,kT=2.494,trunc=1.,__override_time_check__=False,first_order=False):
-        """ xva_arg should be either a pandas timeseries or an iterable collection (i.e. list) of them. """
-        if isinstance(xva_arg,pd.DataFrame):
-            self.xva_list=[xva_arg]
+        """ xva_arg should be either a pandas timeseries or an iterable collection (i.e. list) of them. Set xva_arg=None for load mode. """
+        if xva_arg is not None:
+            if isinstance(xva_arg,pd.DataFrame):
+                self.xva_list=[xva_arg]
+            else:
+                self.xva_list=xva_arg
+            for xva in self.xva_list:
+                for col in ['t','x','v','a']:
+                    if col not in xva.columns:
+                        raise Exception("Please provide txva data frame, or an iterable collection (i.e. list) of txva data frames. And not some other shit.")
         else:
-            self.xva_list=xva_arg
-        for xva in self.xva_list:
-            for col in ['t','x','v','a']:
-                if col not in xva.columns:
-                    raise Exception("Please provide txva data frame, or an iterable collection (i.e. list) of txva data frames. And not some other shit.")
+            self.xva_list=None
+
+
         self.saveall=saveall
         self.prefix=prefix
         self.verbose=verbose
@@ -38,6 +44,9 @@ class Igle(object):
         self.fe_spline=None
         self.fe=None
         self.per=False
+
+        if self.xva_list is None:
+            return
 
         # processing input arguments
         self.weights=np.array([xva.shape[0] for xva in self.xva_list],dtype=int)
@@ -77,16 +86,19 @@ class Igle(object):
             print("Calculate mass...")
             print("Use kT:", self.kT)
 
-        v2sum=0.
-        for i,xva in enumerate(self.xva_list):
-            v2sum+=(xva["v"]**2).mean()*self.weights[i]
-        v2=v2sum/self.weightsum
-        self.mass=self.kT/v2
+        if self.corrs["vv"] is None:
+            v2sum=0.
+            for i,xva in enumerate(self.xva_list):
+                v2sum+=(xva["v"]**2).mean()*self.weights[i]
+            v2=v2sum/self.weightsum
+            self.mass=self.kT/v2
+        else:
+            self.mass=self.kT/self.corrs["vv"].iloc[0]
 
         if self.verbose:
             print("Found mass:", self.mass)
 
-    def compute_fe(self,bins="auto",fehist=None):
+    def compute_fe(self, bins="auto", fehist=None, _dont_save_hist=False):
         '''Computes the free energy. If you run into memory problems, you can provide an histogram.'''
         if self.verbose:
             print ("Calculate histogram...")
@@ -100,7 +112,11 @@ class Igle(object):
             else:
                 print("Assume NON-PERIODIC data.")
 
-        xfa=(fehist[1][1:]+fehist[1][:-1])/2.
+        if len(fehist[1]) > len(fehist[0]):
+            xfa=(fehist[1][1:]+fehist[1][:-1])/2.
+        else:
+            xfa=fehist[1]
+
         pf=fehist[0]
         xf=xfa[np.nonzero(pf)]
         fe=-np.log(pf[np.nonzero(pf)])
@@ -114,7 +130,8 @@ class Igle(object):
             yi_t=interpolate.splev(xfine, self.fe_spline)
             yider_t=interpolate.splev(xfine, self.fe_spline, der=1)
             np.savetxt(self.prefix+self.interpfefile,np.vstack((xfine,yi_t,yider_t)).T)
-            np.savetxt(self.prefix+self.histfile, np.vstack((xfa,pf)).T)
+            if not _dont_save_hist:
+                np.savetxt(self.prefix+self.histfile, np.vstack((xfa,pf)).T)
 
 
     def set_harmonic_u_corr(self,K=0.):
@@ -234,3 +251,36 @@ class Igle(object):
         else:
             yi = interpolate.splev(x, self.fe_spline, der=1)*self.kT
         return yi
+
+    def load(self, prefix=None):
+        if prefix is None:
+            prefix=self.prefix
+
+        if os.path.isfile(prefix+self.corrsfile):
+            print("Found correlation functions.")
+            self.corrs=pd.read_csv(prefix+self.corrsfile, sep=" ", index_col=0)
+            self.dt=self.corrs.index[1]-self.corrs.index[0]
+
+        if os.path.isfile(prefix+self.histfile):
+            print("Found free energy histogram.")
+            lhist=np.loadtxt(prefix+self.histfile)
+            fehist=[lhist[:,1].ravel(),lhist[:,0].ravel()]
+            print("Interpolate...")
+            self.compute_fe(fehist=fehist,_dont_save_hist=True)
+
+        if os.path.isfile(prefix+self.ucorrfile):
+            print("Found potential correlation functions.")
+            self.ucorr=pd.read_csv(prefix+self.ucorrfile, sep=" ", index_col=0)
+            self.dt=self.ucorr.index[1]-self.ucorr.index[0]
+
+        if os.path.isfile(prefix+self.kernelfile):
+            print("Found second kind kernel.")
+            self.kernel=pd.read_csv(prefix+self.kernelfile, sep=" ", index_col=0)
+            self.dt=self.kernel.index[1]-self.kernel.index[0]
+
+        if os.path.isfile(prefix+self.kernelfile_1st):
+            print("Found first kind kernel.")
+            self.kernel_1st=pd.read_csv(prefix+self.kernelfile_1st, sep=" ", index_col=0)
+            self.dt=self.kernel_1st.index[1]-self.kernel_1st.index[0]
+
+        print("Found dt =", self.dt)
