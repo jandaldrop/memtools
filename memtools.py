@@ -8,7 +8,7 @@ from correlation import *
 
 
 def ver():
-    print("This is memtools version 0.82")
+    print("This is memtools version 0.83")
 
 
 def xframe(x, time, round_time=1.e-4, fix_time=True, dt=-1):
