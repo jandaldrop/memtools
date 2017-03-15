@@ -224,5 +224,5 @@ class Igle(object):
         if self.per:
             yi = interpolate.splev(x%(self.x1-self.x0)+self.x0, self.fe_spline, der=1,ext=2)*self.kT
         else:
-            yi = interpolate.splev(x, self.fe_spline, der=1,ext=2)*self.kT
+            yi = interpolate.splev(x, self.fe_spline,der=1,ext=0)*self.kT
         return yi
