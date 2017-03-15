@@ -28,7 +28,7 @@ def pdcorr(df,f1,f2,trunc=None,oname="c"):
         b=df.loc[:,f2].values
         corr=correlation(a,b)
 
-    cf=pd.DataFrame({oname:corr}, index=df.index)
+    cf=pd.DataFrame({oname:corr}, index=df.index-df.index[0])
 
     if not trunc is None:
         cf=cf[df.index<trunc]
