@@ -45,6 +45,9 @@ class Igle(object):
         self.fe=None
         self.per=False
 
+        self.x0_fe=None
+        self.x1_fe=None
+
         if self.xva_list is None:
             return
 
@@ -102,8 +105,6 @@ class Igle(object):
         '''Computes the free energy. If you run into memory problems, you can provide an histogram.'''
         if self.verbose:
             print ("Calculate histogram...")
-        if fehist is None:
-            fehist=np.histogram(np.concatenate([xva["x"].values for xva in self.xva_list]),bins=bins)
         if self.verbose:
             print("Number of bins:",len(fehist[1])-1)
             print ("Interpolate... (ignore p=0!)")
@@ -112,16 +113,33 @@ class Igle(object):
             else:
                 print("Assume NON-PERIODIC data.")
 
-        if len(fehist[1]) > len(fehist[0]):
-            xfa=(fehist[1][1:]+fehist[1][:-1])/2.
-        else:
-            xfa=fehist[1]
+        if fehist is None:
+            if self.per:
+                if type(bins) is str:
+                    raise Exception("Strings not supported for periodic data.")
+                if type(bins) is int:
+                    bins=np.linspace(self.x0,self.x1,bins)
+
+            fehist=np.histogram(np.concatenate([xva["x"].values for xva in self.xva_list]),bins=bins)
+
+
+        xfa=(fehist[1][1:]+fehist[1][:-1])/2.
 
         pf=fehist[0]
         xf=xfa[np.nonzero(pf)]
         fe=-np.log(pf[np.nonzero(pf)])
 
-        self.fe_spline= interpolate.splrep(xf, fe, s=0, per=self.per)
+
+        if self.per:
+            if xf[0] != xfa[0]:
+                raise Exception("No counts at lower edge of periodic boundary currently not supported.")
+            xf=np.append(xf,xf[-1]+(xfa[-1]-xfa[-2]))
+            fe=np.append(fe,0.)
+            assert(xf[-1]-xf[0]==self.x1-self.x0)
+            self.x0_fe=xf[0]
+            self.x1_fe=xf[-1]
+
+        self.fe_spline=interpolate.splrep(xf, fe, s=0, per=self.per)
         self.fe=pd.DataFrame({"F":fe},index=xf)
 
         if self.saveall:
@@ -249,7 +267,10 @@ class Igle(object):
         if self.fe_spline is None:
             raise Exception("Free energy has not been computed.")
         if self.per:
-            yi = interpolate.splev((x-self.x0)%(self.x1-self.x0)+self.x0, self.fe_spline, der=1,ext=2)*self.kT
+            if self.x0_fe is None or self.x1_fe is None:
+                raise Exception("Please compute free energy after setting p.b.c.")
+            assert(self.x1_fe-self.x0_fe==self.x1-self.x0)
+            yi = interpolate.splev((x-self.x0_fe)%(self.x1_fe-self.x0_fe)+self.x0_fe, self.fe_spline, der=1,ext=2)*self.kT
         else:
             yi = interpolate.splev(x, self.fe_spline, der=1)*self.kT
         return yi
