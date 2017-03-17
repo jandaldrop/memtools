@@ -23,6 +23,18 @@ def xframe(x, time, round_time=1.e-4, fix_time=True, dt=-1):
     df.index.name='#t'
     return df
 
+def xvframe(x,v,time,round_time=1.e-4,fix_time=True,dt=-1):
+    x=np.asarray(x)
+    v=np.asarray(v)
+    time=np.asarray(time)
+    if fix_time:
+        if dt<0:
+            dt=np.round((time[1]-time[0])/round_time)*round_time
+        time=np.arange(0.,dt*x.size,dt)
+    df = pd.DataFrame({"t":time.flatten(),"x":x.flatten(),"v":v.flatten()}, index=np.round(time/round_time)*round_time)
+    df.index.name='#t'
+    return df
+
 def compute_a(xvf):
     diffs=xvf.shift(-1)-xvf.shift(1)
     dt=xvf.iloc[1]["t"]-xvf.iloc[0]["t"]
