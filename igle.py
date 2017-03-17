@@ -156,7 +156,9 @@ class Igle(object):
         ncorr=self.xva_list[0][self.xva_list[0].index < self.trunc].shape[0]
 
 
-        self.ucorr=pd.DataFrame({"au":np.zeros(ncorr)}, index=self.xva_list[0][self.xva_list[0].index < self.trunc].index)
+        self.ucorr=pd.DataFrame({"au":np.zeros(ncorr)}, \
+        index=self.xva_list[0][self.xva_list[0].index < self.trunc].index\
+              -self.xva_list[0].index[0])
         if self.first_order:
             self.ucorr["vu"]=np.zeros(ncorr)
 
