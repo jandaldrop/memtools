@@ -159,7 +159,7 @@ class Igle(object):
             raise Exception("Harmonic first order not implemented.")
         else:
             self.ucorr=pd.DataFrame({"au": -K*self.corrs["vv"]},index=self.corrs.index)
-
+            
     def compute_au_corr(self, *args, **kwargs):
         print("WARNING: This function has been renamed to compute_u_corr, please change.")
         self.compute_u_corr(*args, **kwargs)
