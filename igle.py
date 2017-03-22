@@ -105,13 +105,6 @@ class Igle(object):
         '''Computes the free energy. If you run into memory problems, you can provide an histogram.'''
         if self.verbose:
             print ("Calculate histogram...")
-        if self.verbose:
-            print("Number of bins:",len(fehist[1])-1)
-            print ("Interpolate... (ignore p=0!)")
-            if self.per:
-                print("Assume PERIODIC data.")
-            else:
-                print("Assume NON-PERIODIC data.")
 
         if fehist is None:
             if self.per:
@@ -122,6 +115,13 @@ class Igle(object):
 
             fehist=np.histogram(np.concatenate([xva["x"].values for xva in self.xva_list]),bins=bins)
 
+        if self.verbose:
+            print("Number of bins:",len(fehist[1])-1)
+            print ("Interpolate... (ignore p=0!)")
+            if self.per:
+                print("Assume PERIODIC data.")
+            else:
+                print("Assume NON-PERIODIC data.")
 
         xfa=(fehist[1][1:]+fehist[1][:-1])/2.
 
