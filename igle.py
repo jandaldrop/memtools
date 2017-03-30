@@ -155,11 +155,14 @@ class Igle(object):
     def set_harmonic_u_corr(self,K=0.):
         if self.corrs is None:
             raise Exception("Please calculate correlation functions first.")
-        if self.first_order:
-            raise Exception("Harmonic first order not implemented.")
+        if K==0.:
+            self.ucorr=pd.DataFrame({"au": np.zeros(len(self.corrs.index)), "vu": np.zeros(len(self.corrs.index))}, index=self.corrs.index)
         else:
-            self.ucorr=pd.DataFrame({"au": -K*self.corrs["vv"]},index=self.corrs.index)
-            
+            if self.first_order:
+                raise Exception("Harmonic first order not implemented (for K!=0).")
+            else:
+                self.ucorr=pd.DataFrame({"au": -K*self.corrs["vv"]},index=self.corrs.index)
+
     def compute_au_corr(self, *args, **kwargs):
         print("WARNING: This function has been renamed to compute_u_corr, please change.")
         self.compute_u_corr(*args, **kwargs)
@@ -218,7 +221,10 @@ class Igle(object):
         if self.saveall:
             self.corrs.to_csv(self.prefix+self.corrsfile,sep=" ")
 
-    def compute_kernel(self, use_c=True, first_order=None):
+    def compute_kernel(self, first_order=None, k0=0.):
+        """
+Computes the memory kernel. If you give a nonzero value for k0, this is used at time zero, if set to 0, the C-routine will calculate k0 from the second order memory equation.
+        """
         if first_order is None:
             first_order=self.first_order
         if first_order and not self.first_order:
@@ -246,9 +252,9 @@ class Igle(object):
         kernel=np.zeros(len(v_acf))
 
         if first_order:
-            ckernel.ckernel_first_order_core(v_acf,va_cf*self.mass,a_acf*self.mass,vu_cf,au_cf,dt,kernel)
+            ckernel.ckernel_first_order_core(v_acf,va_cf*self.mass,a_acf*self.mass,vu_cf,au_cf,dt,k0,kernel)
         else:
-            ckernel.ckernel_core(v_acf,va_cf,a_acf*self.mass,au_cf,dt,kernel)
+            ckernel.ckernel_core(v_acf,va_cf,a_acf*self.mass,au_cf,dt,k0,kernel)
 
 
         ikernel=cumtrapz(kernel,dx=dt,initial=0.)

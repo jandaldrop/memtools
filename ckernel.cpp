@@ -18,9 +18,9 @@ ckernel_core (PyObject *dummy, PyObject *args)
     PyObject *v_acf_arg=NULL, *va_cf_arg=NULL, *f_acf_arg=NULL, *au_cf_arg=NULL, *out=NULL;
     PyArrayObject *v_acf_ar=NULL, *va_cf_ar=NULL, *f_acf_ar=NULL, *au_cf_ar=NULL, *kernel_ar=NULL;
 
-    double dt;
+    double dt, k0;
 
-    if (!PyArg_ParseTuple(args, "OOOOdO!", &v_acf_arg, &va_cf_arg, &f_acf_arg, &au_cf_arg, &dt,
+    if (!PyArg_ParseTuple(args, "OOOOddO!", &v_acf_arg, &va_cf_arg, &f_acf_arg, &au_cf_arg, &dt, &k0,
         &PyArray_Type, &out)) return NULL;
 
 
@@ -75,7 +75,14 @@ ckernel_core (PyObject *dummy, PyObject *args)
     double prefac=1./(v_acf[0]+va_cf[0]*dt*w(0,0));
     double num;
 
-    kernel[0]=(f_acf[0]+au_cf[0])/v_acf[0];
+    if (k0 == 0)
+    {
+        kernel[0]=(f_acf[0]+au_cf[0])/v_acf[0];
+    }
+    else
+    {
+        kernel[0]=k0;
+    }
 
     for  (int i=1; i < kernel_ar->dimensions[0]; i++)
     {
@@ -103,9 +110,9 @@ ckernel_first_order_core (PyObject *dummy, PyObject *args)
     PyObject *v_acf_arg=NULL, *vf_cf_arg=NULL, *vu_cf_arg=NULL, *f_acf_arg=NULL, *au_cf_arg=NULL, *out=NULL;
     PyArrayObject *v_acf_ar=NULL, *vf_cf_ar=NULL, *vu_cf_ar=NULL, *f_acf_ar=NULL, *au_cf_ar=NULL, *kernel_ar=NULL;
 
-    double dt;
+    double dt, k0;
 
-    if (!PyArg_ParseTuple(args, "OOOOOdO!", &v_acf_arg, &vf_cf_arg, &f_acf_arg, &vu_cf_arg, &au_cf_arg, &dt,
+    if (!PyArg_ParseTuple(args, "OOOOOdO!", &v_acf_arg, &vf_cf_arg, &f_acf_arg, &vu_cf_arg, &au_cf_arg, &dt, &k0,
         &PyArray_Type, &out)) return NULL;
 
 
@@ -165,7 +172,14 @@ ckernel_first_order_core (PyObject *dummy, PyObject *args)
     double prefac=1./(v_acf[0]*dt*w(0,0));
     double num;
 
-    kernel[0]=(f_acf[0]+au_cf[0])/v_acf[0];
+    if (k0 == 0)
+    {
+        kernel[0]=(f_acf[0]+au_cf[0])/v_acf[0];
+    }
+    else
+    {
+        kernel[0]=k0;
+    }
 
     for  (int i=1; i < kernel_ar->dimensions[0]; i++)
     {
