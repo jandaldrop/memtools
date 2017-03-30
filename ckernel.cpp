@@ -112,7 +112,7 @@ ckernel_first_order_core (PyObject *dummy, PyObject *args)
 
     double dt, k0;
 
-    if (!PyArg_ParseTuple(args, "OOOOOdO!", &v_acf_arg, &vf_cf_arg, &f_acf_arg, &vu_cf_arg, &au_cf_arg, &dt, &k0,
+    if (!PyArg_ParseTuple(args, "OOOOOddO!", &v_acf_arg, &vf_cf_arg, &f_acf_arg, &vu_cf_arg, &au_cf_arg, &dt, &k0,
         &PyArray_Type, &out)) return NULL;
 
 
