@@ -45,6 +45,9 @@ class Igle(object):
         self.fe=None
         self.per=False
 
+        self.x0_fe=None
+        self.x1_fe=None
+
         if self.xva_list is None:
             return
 
@@ -102,8 +105,16 @@ class Igle(object):
         '''Computes the free energy. If you run into memory problems, you can provide an histogram.'''
         if self.verbose:
             print ("Calculate histogram...")
+
         if fehist is None:
+            if self.per:
+                if type(bins) is str:
+                    raise Exception("Strings not supported for periodic data.")
+                if type(bins) is int:
+                    bins=np.linspace(self.x0,self.x1,bins)
+
             fehist=np.histogram(np.concatenate([xva["x"].values for xva in self.xva_list]),bins=bins)
+
         if self.verbose:
             print("Number of bins:",len(fehist[1])-1)
             print ("Interpolate... (ignore p=0!)")
@@ -112,16 +123,23 @@ class Igle(object):
             else:
                 print("Assume NON-PERIODIC data.")
 
-        if len(fehist[1]) > len(fehist[0]):
-            xfa=(fehist[1][1:]+fehist[1][:-1])/2.
-        else:
-            xfa=fehist[1]
+        xfa=(fehist[1][1:]+fehist[1][:-1])/2.
 
         pf=fehist[0]
         xf=xfa[np.nonzero(pf)]
         fe=-np.log(pf[np.nonzero(pf)])
 
-        self.fe_spline= interpolate.splrep(xf, fe, s=0, per=self.per)
+
+        if self.per:
+            if xf[0] != xfa[0]:
+                raise Exception("No counts at lower edge of periodic boundary currently not supported.")
+            xf=np.append(xf,xf[-1]+(xfa[-1]-xfa[-2]))
+            fe=np.append(fe,0.)
+            assert(xf[-1]-xf[0]==self.x1-self.x0)
+            self.x0_fe=xf[0]
+            self.x1_fe=xf[-1]
+
+        self.fe_spline=interpolate.splrep(xf, fe, s=0, per=self.per)
         self.fe=pd.DataFrame({"F":fe},index=xf)
 
         if self.saveall:
@@ -137,10 +155,13 @@ class Igle(object):
     def set_harmonic_u_corr(self,K=0.):
         if self.corrs is None:
             raise Exception("Please calculate correlation functions first.")
-        if self.first_order:
-            raise Exception("Harmonic first order not implemented.")
+        if K==0.:
+            self.ucorr=pd.DataFrame({"au": np.zeros(len(self.corrs.index)), "vu": np.zeros(len(self.corrs.index))}, index=self.corrs.index)
         else:
-            self.ucorr=pd.DataFrame({"au": -K*self.corrs["vv"]},index=self.corrs.index)
+            if self.first_order:
+                raise Exception("Harmonic first order not implemented (for K!=0).")
+            else:
+                self.ucorr=pd.DataFrame({"au": -K*self.corrs["vv"]},index=self.corrs.index)
 
     def compute_au_corr(self, *args, **kwargs):
         print("WARNING: This function has been renamed to compute_u_corr, please change.")
@@ -156,7 +177,9 @@ class Igle(object):
         ncorr=self.xva_list[0][self.xva_list[0].index < self.trunc].shape[0]
 
 
-        self.ucorr=pd.DataFrame({"au":np.zeros(ncorr)}, index=self.xva_list[0][self.xva_list[0].index < self.trunc].index)
+        self.ucorr=pd.DataFrame({"au":np.zeros(ncorr)}, \
+        index=self.xva_list[0][self.xva_list[0].index < self.trunc].index\
+              -self.xva_list[0].index[0])
         if self.first_order:
             self.ucorr["vu"]=np.zeros(ncorr)
 
@@ -198,7 +221,10 @@ class Igle(object):
         if self.saveall:
             self.corrs.to_csv(self.prefix+self.corrsfile,sep=" ")
 
-    def compute_kernel(self, use_c=True, first_order=None):
+    def compute_kernel(self, first_order=None, k0=0.):
+        """
+Computes the memory kernel. If you give a nonzero value for k0, this is used at time zero, if set to 0, the C-routine will calculate k0 from the second order memory equation.
+        """
         if first_order is None:
             first_order=self.first_order
         if first_order and not self.first_order:
@@ -226,9 +252,9 @@ class Igle(object):
         kernel=np.zeros(len(v_acf))
 
         if first_order:
-            ckernel.ckernel_first_order_core(v_acf,va_cf*self.mass,a_acf*self.mass,vu_cf,au_cf,dt,kernel)
+            ckernel.ckernel_first_order_core(v_acf,va_cf*self.mass,a_acf*self.mass,vu_cf,au_cf,dt,k0,kernel)
         else:
-            ckernel.ckernel_core(v_acf,va_cf,a_acf*self.mass,au_cf,dt,kernel)
+            ckernel.ckernel_core(v_acf,va_cf,a_acf*self.mass,au_cf,dt,k0,kernel)
 
 
         ikernel=cumtrapz(kernel,dx=dt,initial=0.)
@@ -247,7 +273,10 @@ class Igle(object):
         if self.fe_spline is None:
             raise Exception("Free energy has not been computed.")
         if self.per:
-            yi = interpolate.splev(x%(self.x1-self.x0)+self.x0, self.fe_spline, der=1,ext=2)*self.kT
+            if self.x0_fe is None or self.x1_fe is None:
+                raise Exception("Please compute free energy after setting p.b.c.")
+            assert(self.x1_fe-self.x0_fe==self.x1-self.x0)
+            yi = interpolate.splev((x-self.x0_fe)%(self.x1_fe-self.x0_fe)+self.x0_fe, self.fe_spline, der=1,ext=2)*self.kT
         else:
             yi = interpolate.splev(x, self.fe_spline, der=1)*self.kT
         return yi
