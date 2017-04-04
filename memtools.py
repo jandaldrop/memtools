@@ -1,10 +1,10 @@
 from __future__ import print_function
 import numpy as np
 import pandas as pd
-import mdtraj
 from igle import *
 from igleplot import *
 from igleu import *
+from iglec import *
 from correlation import *
 
 
