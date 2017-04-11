@@ -12,7 +12,7 @@ class IgleU(IglePlot):
   def __init__(self, *args, **kwargs):
     super(IgleU, self).__init__(*args, **kwargs)
     self.potential = Potentials.HARMONIC
-
+    self.fe_spline = True
 
   def dU(self,x):
     if(self.potential==Potentials.HARMONIC):
