@@ -7,7 +7,7 @@ ext_modules = [ Extension('ckernel', sources = ['ckernel.cpp']) ]
 
 setup(
         name = 'ckernel',
-        version = '0.2',
+        version = '1.1',
         include_dirs = [np.get_include()], #Add Include path of numpy
         ext_modules = ext_modules
       )

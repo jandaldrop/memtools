@@ -224,7 +224,7 @@ class Igle(object):
         if self.saveall:
             self.corrs.to_csv(self.prefix+self.corrsfile,sep=" ")
 
-    def compute_kernel(self, first_order=None, k0=0.):
+    def compute_kernel(self, first_order=None, hybrid=None, k0=0.):
         """
 Computes the memory kernel. If you give a nonzero value for k0, this is used at time zero, if set to 0, the C-routine will calculate k0 from the second order memory equation.
         """
@@ -263,7 +263,7 @@ Computes the memory kernel. If you give a nonzero value for k0, this is used at 
         if first_order:
             ckernel.ckernel_first_order_core(v_acf,va_cf*self.mass,a_acf*self.mass,vu_cf,au_cf,dt,k0,kernel)
         elif hybrid:
-            ckernel.ckernel_hybrid_core(v_acf,va_cf,a_acf*self.mass,au_cf,va_acf*self.mass,vu_cf,dt,k0,kernel)
+            ckernel.ckernel_hybrid_core(v_acf,va_cf,a_acf*self.mass,au_cf,va_cf*self.mass,vu_cf,dt,k0,kernel)
         else:
             ckernel.ckernel_core(v_acf,va_cf,a_acf*self.mass,au_cf,dt,k0,kernel)
 

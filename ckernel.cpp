@@ -122,7 +122,6 @@ ckernel_hybrid_core (PyObject *dummy, PyObject *args)
         &PyArray_Type, &out)) return NULL;
 
     v_acf_ar = (PyArrayObject*)PyArray_FROM_OTF(v_acf_arg, NPY_DOUBLE, NPY_IN_ARRAY);
-    if (v_acf_ar== NULL) return NULL;
     va_cf_ar = (PyArrayObject*)PyArray_FROM_OTF(va_cf_arg, NPY_DOUBLE, NPY_IN_ARRAY);
     f_acf_ar = (PyArrayObject*)PyArray_FROM_OTF(f_acf_arg, NPY_DOUBLE, NPY_IN_ARRAY);
     au_cf_ar = (PyArrayObject*)PyArray_FROM_OTF(au_cf_arg, NPY_DOUBLE, NPY_IN_ARRAY);
@@ -131,12 +130,14 @@ ckernel_hybrid_core (PyObject *dummy, PyObject *args)
     vu_cf_ar = (PyArrayObject*)PyArray_FROM_OTF(vu_cf_arg, NPY_DOUBLE, NPY_IN_ARRAY);
     vf_cf_ar = (PyArrayObject*)PyArray_FROM_OTF(vf_cf_arg, NPY_DOUBLE, NPY_IN_ARRAY);
 
-    if (kernel_ar == NULL || f_acf_ar==NULL || va_cf_ar==NULL)
+    if (kernel_ar == NULL || f_acf_ar==NULL || va_cf_ar==NULL || v_acf_ar == NULL || au_cf_ar == NULL || vu_cf_ar == NULL || vf_cf_ar == NULL)
     {
       Py_XDECREF(v_acf_ar);
       Py_XDECREF(va_cf_ar);
       Py_XDECREF(f_acf_ar);
       Py_XDECREF(au_cf_ar);
+      Py_XDECREF(vu_cf_ar);
+      Py_XDECREF(vf_cf_ar);
       PyArray_XDECREF_ERR(kernel_ar);
       return NULL;
     }
@@ -147,11 +148,14 @@ ckernel_hybrid_core (PyObject *dummy, PyObject *args)
     (va_cf_ar->nd == 1) &&
     (f_acf_ar->nd == 1) &&
     (au_cf_ar->nd == 1) &&
-
+    (vf_cf_ar->nd == 1) &&
+    (vu_cf_ar->nd == 1) &&
     (kernel_ar->nd == 1) &&
     (va_cf_ar->dimensions[0] == v_acf_ar->dimensions[0]) &&
     (f_acf_ar->dimensions[0] == v_acf_ar->dimensions[0]) &&
     (au_cf_ar->dimensions[0] == v_acf_ar->dimensions[0]) &&
+    (vf_cf_ar->dimensions[0] == v_acf_ar->dimensions[0]) &&
+    (vu_cf_ar->dimensions[0] == v_acf_ar->dimensions[0]) &&
     (kernel_ar->dimensions[0] <= v_acf_ar->dimensions[0]) ))
     {
       std::cerr << "Size mismatch." << std::endl;
@@ -159,6 +163,8 @@ ckernel_hybrid_core (PyObject *dummy, PyObject *args)
       Py_XDECREF(va_cf_ar);
       Py_XDECREF(f_acf_ar);
       Py_XDECREF(au_cf_ar);
+      Py_XDECREF(vu_cf_ar);
+      Py_XDECREF(vf_cf_ar);
       PyArray_XDECREF_ERR(kernel_ar);
       return NULL;
     }
@@ -192,7 +198,8 @@ ckernel_hybrid_core (PyObject *dummy, PyObject *args)
     }
     else
     {
-        kernel[0]=k0;
+        kernel[0] = k0;
+        kernel[1] = k0;
     }
 
     for  (int i=2; i < kernel_ar->dimensions[0]; i++)
