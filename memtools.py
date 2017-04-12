@@ -56,52 +56,19 @@ def compute_va(xf, correct_jumps=False, jump=360, jump_thr=270):
     ddiffs=diffs.shift(-1)-diffs
     sdiffs=diffs.shift(-1)+diffs
 
-    spdiffs=sdiffs.shift(-1)+sdiffs
-
     xva=pd.DataFrame({"t":xf["t"],"x":xf["x"],"v":sdiffs["x"]/(2*dt),"a":ddiffs["x"]/(dt**2)},index=xf.index)
-    #xva=pd.DataFrame({"t":xf["t"],"x":xf["x"],"v":sdiffs["x"]/(2*dt),"a":spdiffs["x"]/(4*dt**2)},index=xf.index)
     xva = xva[['t', 'x', 'v', 'a']]
     xva.index.name='#t'
 
     return xva.dropna()
 
-def compute_a_forward(xvf):
+# if velocities are known from the simulation this routine will compute acceleration only by the forward averages
+# the va correlation function is then decaying in one timestep not smear out the delta-function in the random force
+def compute_a_delta(xvf):
     diffs=xvf-xvf.shift(1)
     dt=xvf.iloc[1]["t"]-xvf.iloc[0]["t"]
 
     xva=pd.DataFrame({"t":xvf["t"],"x":xvf["x"],"v":xvf["v"],"a":diffs["v"]/(dt)},index=xvf.index)
-    xva = xva[['t', 'x', 'v', 'a']]
-    xva.index.name='#t'
-
-    return xva.dropna()
-
-
-def compute_va_forward(xf, correct_jumps=False, jump=360, jump_thr=270):
-    diffs=xf-xf.shift(1)
-    dt=xf.iloc[1]["t"]-xf.iloc[0]["t"]
-    if correct_jumps:
-        diffs.loc[diffs["x"] < jump_thr,"x"]+=jump
-        diffs.loc[diffs["x"] > jump_thr,"x"]-=jump
-
-    ddiffs=diffs.shift(-1)-diffs
-    #sdiffs=diffs.shift(-1)+diffs
-
-    #spdiffs=sdiffs.shift(-1)+sdiffs
-
-    xva=pd.DataFrame({"t":xf["t"],"x":xf["x"],"v":diffs["x"]/(dt),"a":ddiffs["x"]/(dt**2)},index=xf.index)
-    #xva=pd.DataFrame({"t":xf["t"],"x":xf["x"],"v":sdiffs["x"]/(2*dt),"a":spdiffs["x"]/(4*dt**2)},index=xf.index)
-    xva = xva[['t', 'x', 'v', 'a']]
-    xva.index.name='#t'
-
-    return xva.dropna()
-
-def compute_a_clean(xvf):
-    xvf1=xvf.iloc[1::2]
-    xvf2=xvf.iloc[::2]
-    diffs=xvf2-xvf2.shift(1)
-    dt=xvf.iloc[1]["t"]-xvf.iloc[0]["t"]
-
-    xva=pd.DataFrame({"t":xvf1["t"],"x":xvf1["x"],"v":xvf1["v"],"a":diffs["v"]/(dt)},index=xvf.index)
     xva = xva[['t', 'x', 'v', 'a']]
     xva.index.name='#t'
 
