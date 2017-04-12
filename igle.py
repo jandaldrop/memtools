@@ -9,7 +9,7 @@ from scipy.integrate import cumtrapz
 import ckernel
 
 class Igle(object):
-    def __init__(self,xva_arg,saveall=True,prefix="",verbose=True,kT=2.494,trunc=1.,__override_time_check__=False,first_order=False):
+    def __init__(self,xva_arg,saveall=True,prefix="",verbose=True,kT=2.494,trunc=1.,__override_time_check__=False,first_order=False, hybrid=False):
         """ xva_arg should be either a pandas timeseries or an iterable collection (i.e. list) of them. Set xva_arg=None for load mode. """
         if xva_arg is not None:
             if isinstance(xva_arg,pd.DataFrame):
@@ -23,12 +23,15 @@ class Igle(object):
         else:
             self.xva_list=None
 
+        if first_order and hybrid:
+          raise Exception("First_order and hybrid computations are mutually exclusive! Please decide for one!")
 
         self.saveall=saveall
         self.prefix=prefix
         self.verbose=verbose
         self.kT=kT
         self.first_order=first_order
+        self.hybrid=hybrid
 
         # filenames
         self.corrsfile="corrs.txt"
@@ -158,7 +161,7 @@ class Igle(object):
         if K==0.:
             self.ucorr=pd.DataFrame({"au": np.zeros(len(self.corrs.index)), "vu": np.zeros(len(self.corrs.index))}, index=self.corrs.index)
         else:
-            if self.first_order:
+            if self.first_order or self.hybrid:
                 raise Exception("Harmonic first order not implemented (for K!=0).")
             else:
                 self.ucorr=pd.DataFrame({"au": -K*self.corrs["vv"]},index=self.corrs.index)
@@ -180,7 +183,7 @@ class Igle(object):
         self.ucorr=pd.DataFrame({"au":np.zeros(ncorr)}, \
         index=self.xva_list[0][self.xva_list[0].index < self.trunc].index\
               -self.xva_list[0].index[0])
-        if self.first_order:
+        if self.first_order or self.hybrid:
             self.ucorr["vu"]=np.zeros(ncorr)
 
         for weight,xva in zip(self.weights,self.xva_list):
@@ -189,7 +192,7 @@ class Igle(object):
             corr=correlation(a,self.dU(x),subtract_mean=False)
             self.ucorr["au"]+=weight*corr[:ncorr]
 
-            if self.first_order:
+            if self.first_order or self.hybrid:
                 v=xva["v"].values
                 corr=correlation(v,self.dU(x),subtract_mean=False)
                 self.ucorr["vu"]+=weight*corr[:ncorr]
@@ -229,6 +232,12 @@ Computes the memory kernel. If you give a nonzero value for k0, this is used at 
             first_order=self.first_order
         if first_order and not self.first_order:
             raise Excpetion("Please initialize in first order mode, which allows both first and second order.")
+        if hybrid is None:
+            hybrid=self.hybrid
+        if hybrid and not self.first_order and not self.hybrid:
+            raise Excpetion("Please initialize in hybrid mode, which allows first, second order and hybrid.")
+        if first_order and hybrid:
+          raise Exception("First_order and hybrid computations are mutually exclusive! Please decide for one!")
         if self.corrs is None or self.ucorr is None:
             raise Exception("Need correlation functions to compute the kernel.")
         if self.mass is None:
@@ -240,7 +249,7 @@ Computes the memory kernel. If you give a nonzero value for k0, this is used at 
         va_cf=self.corrs["va"].values
         dt=self.corrs.index[1]-self.corrs.index[0]
 
-        if first_order:
+        if first_order or hybrid:
             vu_cf=self.ucorr["vu"].values
         #else: #at the moment
         a_acf=self.corrs["aa"].values
@@ -253,6 +262,8 @@ Computes the memory kernel. If you give a nonzero value for k0, this is used at 
 
         if first_order:
             ckernel.ckernel_first_order_core(v_acf,va_cf*self.mass,a_acf*self.mass,vu_cf,au_cf,dt,k0,kernel)
+        elif hybrid:
+            ckernel.ckernel_hybrid_core(v_acf,va_cf,a_acf*self.mass,au_cf,va_acf*self.mass,vu_cf,dt,k0,kernel)
         else:
             ckernel.ckernel_core(v_acf,va_cf,a_acf*self.mass,au_cf,dt,k0,kernel)
 
