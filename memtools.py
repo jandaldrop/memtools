@@ -4,10 +4,10 @@ import pandas as pd
 from igle import *
 from igleplot import *
 from correlation import *
-
+from flist import *
 
 def ver():
-    print("This is memtools version 1.0")
+    print("This is memtools version 1.01")
 
 
 def xframe(x, time, round_time=1.e-4, fix_time=True, dt=-1):
