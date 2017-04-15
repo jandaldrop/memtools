@@ -8,21 +8,31 @@ from scipy import interpolate
 from scipy.integrate import cumtrapz
 import ckernel
 
+import sys
+if sys.version_info < (3,0):
+    print("Import python3 like zip function.")
+    from itertools import izip as zip
+
 class Igle(object):
-    def __init__(self,xva_arg,saveall=True,prefix="",verbose=True,kT=2.494,trunc=1.,__override_time_check__=False,first_order=False):
-        """ xva_arg should be either a pandas timeseries or an iterable collection (i.e. list) of them. Set xva_arg=None for load mode. """
+    def __init__(self,xva_arg,saveall=True,prefix="",verbose=True,kT=2.494,trunc=1.,__override_time_check__=False,initial_checks=True,first_order=False):
+        """
+xva_arg should be either a pandas timeseries or an
+iterable collection (i.e. list) of them. Set xva_arg=None for load mode.
+        """
         if xva_arg is not None:
             if isinstance(xva_arg,pd.DataFrame):
                 self.xva_list=[xva_arg]
             else:
                 self.xva_list=xva_arg
-            for xva in self.xva_list:
-                for col in ['t','x','v','a']:
-                    if col not in xva.columns:
-                        raise Exception("Please provide txva data frame, or an iterable collection (i.e. list) of txva data frames. And not some other shit.")
+            if isinstance(xva_list,flist) and not initial_checks:
+                print("WARNING: Consider setting initial_checks to False.")
+            if initial_checks:
+                for xva in self.xva_list:
+                    for col in ['t','x','v','a']:
+                        if col not in xva.columns:
+                            raise Exception("Please provide txva data frame, or an iterable collection (i.e. list) of txva data frames. And not some other shit.")
         else:
             self.xva_list=None
-
 
         self.saveall=saveall
         self.prefix=prefix
@@ -59,16 +69,16 @@ class Igle(object):
             print("Found trajectories with the following legths:")
             print(self.weights)
 
-        lastinds=np.array([xva.index[-1] for xva in self.xva_list],dtype=int)
-        smallest=np.min(lastinds)
-        if smallest < trunc:
-            if self.verbose:
-                print("Warning: Found a trajectory shorter than the argument trunc. Override.")
-            trunc=smallest
+        if initial_checks:
+            lastinds=np.array([xva.index[-1] for xva in self.xva_list],dtype=int)
+            smallest=np.min(lastinds)
+            if smallest < trunc:
+                if self.verbose:
+                    print("Warning: Found a trajectory shorter than the argument trunc. Override.")
+                trunc=smallest
         self.trunc=trunc
 
-
-        if not __override_time_check__:
+        if initial_checks and not __override_time_check__:
             sxva=self.xva_list[np.argmin(self.weights)]
             for xva in self.xva_list:
                 if xva is not sxva:
