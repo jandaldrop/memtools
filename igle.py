@@ -6,7 +6,9 @@ from correlation import *
 from memtools import *
 from scipy import interpolate
 from scipy.integrate import cumtrapz
+from flist import *
 import ckernel
+
 
 import sys
 if sys.version_info < (3,0):
@@ -16,15 +18,15 @@ if sys.version_info < (3,0):
 class Igle(object):
     def __init__(self,xva_arg,saveall=True,prefix="",verbose=True,kT=2.494,trunc=1.,__override_time_check__=False,initial_checks=True,first_order=False):
         """
-xva_arg should be either a pandas timeseries or an
-iterable collection (i.e. list) of them. Set xva_arg=None for load mode.
+xva_arg should be either a pandas timeseries
+or a listlike collection of them. Set xva_arg=None for load mode.
         """
         if xva_arg is not None:
             if isinstance(xva_arg,pd.DataFrame):
                 self.xva_list=[xva_arg]
             else:
                 self.xva_list=xva_arg
-            if isinstance(xva_list,flist) and not initial_checks:
+            if isinstance(self.xva_list,flist) and not initial_checks:
                 print("WARNING: Consider setting initial_checks to False.")
             if initial_checks:
                 for xva in self.xva_list:

@@ -7,7 +7,7 @@ from correlation import *
 from flist import *
 
 def ver():
-    print("This is memtools version 1.02")
+    print("This is memtools version 1.03")
 
 
 def xframe(x, time, round_time=1.e-4, fix_time=True, dt=-1):
