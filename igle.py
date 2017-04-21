@@ -26,7 +26,7 @@ or a listlike collection of them. Set xva_arg=None for load mode.
                 self.xva_list=[xva_arg]
             else:
                 self.xva_list=xva_arg
-            if isinstance(self.xva_list,flist) and not initial_checks:
+            if isinstance(self.xva_list,flist) and initial_checks:
                 print("WARNING: Consider setting initial_checks to False.")
             if initial_checks:
                 for xva in self.xva_list:
