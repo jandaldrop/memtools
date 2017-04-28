@@ -7,7 +7,7 @@ from correlation import *
 from flist import *
 
 def ver():
-    print("This is memtools version 1.04")
+    print("This is memtools version 1.06")
 
 
 def xframe(x, time, round_time=1.e-4, fix_time=True, dt=-1):
@@ -16,8 +16,8 @@ def xframe(x, time, round_time=1.e-4, fix_time=True, dt=-1):
     if fix_time:
         if dt<0:
             dt=np.round((time[1]-time[0])/round_time)*round_time
-        time=np.arange(0.,dt*x.size,dt)
-    df = pd.DataFrame({"t":time.flatten(),"x":x.flatten()}, index=np.round(time/round_time)*round_time)
+        time=np.linspace(0.,dt*x.size,x.size)
+    df = pd.DataFrame({"t":time.ravel(),"x":x.ravel()}, index=time.ravel())
     df.index.name='#t'
     return df
 
