@@ -79,6 +79,8 @@ def computeFrozenKernel(numpy_tf,trunc=None, file=None,kT=2.4943,m=1.):
     corr = correlation(numpy_tf[:,1],subtract_mean=True)/(m*kT)
     ikernel=cumtrapz(corr,x=t,initial=0.)
     kernel_ff=pd.DataFrame({"k":corr,"ik":ikernel},index=t)
+    if not trunc is None:
+        kernel_ff=kernel_ff[kernel_ff.index<trunc]
     if file is not None:
         kernel_ff.to_csv(file,sep=" ")
     return kernel_ff
