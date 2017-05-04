@@ -42,6 +42,8 @@ or a listlike collection of them. Set xva_arg=None for load mode.
         self.kT=kT
         self.first_order=first_order
         self.corrs_from_der=corrs_from_der
+        if self.corrs_from_der:
+            print("WARNING: corrs_from_der=True is not properly tested.")
 
         # filenames
         self.corrsfile="corrs.txt"
@@ -219,8 +221,8 @@ or a listlike collection of them. Set xva_arg=None for load mode.
         self.ucorr/=self.weightsum
         if self.corrs_from_der:
             dt=self.ucorr.index[1]-self.ucorr.index[0]
-            self.ucorr["vu"]=-np.gradient(self.corrs["xu"].values, dt, edge_order=edge_order)
-            self.ucorr["au"]=-np.gradient(self.corrs["vu"].values, dt, edge_order=edge_order)
+            self.ucorr["vu"]=-np.gradient(self.ucorr["xu"].values, dt, edge_order=edge_order)
+            self.ucorr["au"]=-np.gradient(self.ucorr["vu"].values, dt, edge_order=edge_order)
 
         if self.saveall:
             self.ucorr.to_csv(self.prefix+self.ucorrfile,sep=" ")
@@ -243,7 +245,7 @@ or a listlike collection of them. Set xva_arg=None for load mode.
             self.corrs["xv"]=np.gradient(self.corrs["xx"].values, dt, edge_order=edge_order)
             self.corrs["vv"]=-np.gradient(self.corrs["xv"].values, dt, edge_order=edge_order)
             self.corrs["va"]=np.gradient(self.corrs["vv"].values, dt, edge_order=edge_order)
-            self.corrs["aa"]=-np.gradient(self.corrs["aa"].values, dt, edge_order=edge_order)
+            self.corrs["aa"]=-np.gradient(self.corrs["va"].values, dt, edge_order=edge_order)
 
         else:
             for weight,xva in zip(self.weights,self.xva_list):
