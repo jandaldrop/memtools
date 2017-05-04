@@ -16,7 +16,7 @@ if sys.version_info < (3,0):
     from itertools import izip as zip
 
 class Igle(object):
-    def __init__(self,xva_arg,saveall=True,prefix="",verbose=True,kT=2.494,trunc=1.,__override_time_check__=False,initial_checks=True,first_order=False):
+    def __init__(self,xva_arg,saveall=True,prefix="",verbose=True,kT=2.494,trunc=1.,__override_time_check__=False,initial_checks=True,first_order=False,corrs_from_der=False):
         """
 xva_arg should be either a pandas timeseries
 or a listlike collection of them. Set xva_arg=None for load mode.
@@ -41,6 +41,7 @@ or a listlike collection of them. Set xva_arg=None for load mode.
         self.verbose=verbose
         self.kT=kT
         self.first_order=first_order
+        self.corrs_from_der=corrs_from_der
 
         # filenames
         self.corrsfile="corrs.txt"
@@ -179,7 +180,7 @@ or a listlike collection of them. Set xva_arg=None for load mode.
         print("WARNING: This function has been renamed to compute_u_corr, please change.")
         self.compute_u_corr(*args, **kwargs)
 
-    def compute_u_corr(self):
+    def compute_u_corr(self, edge_order=2):
         if self.fe_spline is None:
             raise Exception("Free energy has not been computed.")
         if self.verbose:
@@ -188,47 +189,76 @@ or a listlike collection of them. Set xva_arg=None for load mode.
         # get target length from first element and trunc
         ncorr=self.xva_list[0][self.xva_list[0].index < self.trunc].shape[0]
 
+        if self.corrs_from_der:
+            self.ucorr=pd.DataFrame({"xu":np.zeros(ncorr)}, \
+                index=self.xva_list[0][self.xva_list[0].index < self.trunc].index\
+                -self.xva_list[0].index[0])
+        else:
+            self.ucorr=pd.DataFrame({"au":np.zeros(ncorr)}, \
+                index=self.xva_list[0][self.xva_list[0].index < self.trunc].index\
+                -self.xva_list[0].index[0])
 
-        self.ucorr=pd.DataFrame({"au":np.zeros(ncorr)}, \
-        index=self.xva_list[0][self.xva_list[0].index < self.trunc].index\
-              -self.xva_list[0].index[0])
         if self.first_order:
             self.ucorr["vu"]=np.zeros(ncorr)
 
         for weight,xva in zip(self.weights,self.xva_list):
             x=xva["x"].values
-            a=xva["a"].values
-            corr=correlation(a,self.dU(x),subtract_mean=False)
-            self.ucorr["au"]+=weight*corr[:ncorr]
+            if self.corrs_from_der:
+                corr=correlation(x,self.dU(x),subtract_mean=False)
+                self.ucorr["xu"]+=weight*corr[:ncorr]
+            else:
+                a=xva["a"].values
+                corr=correlation(a,self.dU(x),subtract_mean=False)
+                self.ucorr["au"]+=weight*corr[:ncorr]
 
-            if self.first_order:
-                v=xva["v"].values
-                corr=correlation(v,self.dU(x),subtract_mean=False)
-                self.ucorr["vu"]+=weight*corr[:ncorr]
+                if self.first_order:
+                    v=xva["v"].values
+                    corr=correlation(v,self.dU(x),subtract_mean=False)
+                    self.ucorr["vu"]+=weight*corr[:ncorr]
 
         self.ucorr/=self.weightsum
+        if self.corrs_from_der:
+            dt=self.ucorr.index[1]-self.ucorr.index[0]
+            self.ucorr["vu"]=-np.gradient(self.corrs["xu"].values, dt, edge_order=edge_order)
+            self.ucorr["au"]=-np.gradient(self.corrs["vu"].values, dt, edge_order=edge_order)
 
         if self.saveall:
             self.ucorr.to_csv(self.prefix+self.ucorrfile,sep=" ")
 
-    def compute_corrs(self):
+    def compute_corrs(self, edge_order=2):
         if self.verbose:
             print("Calculate vv, va and aa correlation functions...")
 
         self.corrs=None
-        for weight,xva in zip(self.weights,self.xva_list):
-            vvcorrw=weight*pdcorr(xva,"v","v",self.trunc,"vv")
-            vacorrw=weight*pdcorr(xva,"v","a",self.trunc,"va")
-            aacorrw=weight*pdcorr(xva,"a","a",self.trunc,"aa")
-            if self.corrs is None:
-                self.corrs=pd.concat([vvcorrw,vacorrw,aacorrw],axis=1)
-            else:
-                self.corrs["vv"]+=vvcorrw["vv"]
-                self.corrs["va"]+=vacorrw["va"]
-                self.corrs["aa"]+=aacorrw["aa"]
-        #print(self.corrs)
-        self.corrs/=self.weightsum
-        #print(self.corrs)
+        if self.corrs_from_der:
+            for weight,xva in zip(self.weights,self.xva_list):
+                xxcorrw=weight*pdcorr(xva,"x","x",self.trunc,"xx")
+                if self.corrs is None:
+                    self.corrs=xxcorrw
+                else:
+                    self.corrs["xx"]+=xxcorrw["xx"]
+            self.corrs/=self.weightsum
+
+            dt=self.corrs.index[1]-self.corrs.index[0]
+            self.corrs["xv"]=np.gradient(self.corrs["xx"].values, dt, edge_order=edge_order)
+            self.corrs["vv"]=-np.gradient(self.corrs["xv"].values, dt, edge_order=edge_order)
+            self.corrs["va"]=np.gradient(self.corrs["vv"].values, dt, edge_order=edge_order)
+            self.corrs["aa"]=-np.gradient(self.corrs["aa"].values, dt, edge_order=edge_order)
+
+        else:
+            for weight,xva in zip(self.weights,self.xva_list):
+                vvcorrw=weight*pdcorr(xva,"v","v",self.trunc,"vv")
+                vacorrw=weight*pdcorr(xva,"v","a",self.trunc,"va")
+                aacorrw=weight*pdcorr(xva,"a","a",self.trunc,"aa")
+                if self.corrs is None:
+                    self.corrs=pd.concat([vvcorrw,vacorrw,aacorrw],axis=1)
+                else:
+                    self.corrs["vv"]+=vvcorrw["vv"]
+                    self.corrs["va"]+=vacorrw["va"]
+                    self.corrs["aa"]+=aacorrw["aa"]
+            #print(self.corrs)
+            self.corrs/=self.weightsum
+            #print(self.corrs)
 
         if self.saveall:
             self.corrs.to_csv(self.prefix+self.corrsfile,sep=" ")
