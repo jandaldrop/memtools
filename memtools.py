@@ -74,13 +74,13 @@ def compute_a_delta(xvf):
 
     return xva.dropna()
 
-def computeFrozenKernel(numpy_tf,trunc=None, file=None,kT=2.4943,m=1.):
+def computeFrozenKernel(numpy_tf,trunc=None, file=None,kT=2.4943):
     tf=numpy_tf
     meanF = np.mean(tf[:,1])
     xf=xframe(tf[:,1]-meanF,tf[:,0])
     kernel_frozen = pdcorr(xf,"x","x",trunc=trunc,oname="ff")
     ikernel=cumtrapz(kernel_frozen['ff'],x=kernel_frozen.index,initial=0.)
-    kernel_ff=pd.DataFrame({"k":kernel_frozen['ff']/(m*kT),"ik":ikernel/(m*kT)},index=kernel_frozen.index.values)
+    kernel_ff=pd.DataFrame({"k":kernel_frozen['ff']/(kT),"ik":ikernel/(kT)},index=kernel_frozen.index.values)
     if file is not None:
         kernel_ff.to_csv(file,sep=" ")
     return kernel_ff
