@@ -53,9 +53,9 @@ class IgleCU(IgleC):
 
   def dU(self,x):
     if(self.potential==Potentials.HARMONIC):
-      return -2*x*self.kT
+      return 2*x*self.kT
     elif(self.potential==Potentials.DOUBLEWELL):
-      return -4*np.power(x,3)+2*x*self.kT
+      return 4*np.power(x,3)-4*x*self.kT
     else:
       print("WARNING: analytic potential type not implemented")
       return 0.0
