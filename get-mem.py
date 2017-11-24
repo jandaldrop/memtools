@@ -13,7 +13,9 @@ xf=xframe(dih,traj.time)
 xvaf=compute_va(xf,correct_jumps=True)
 #print xvaf
 
-mymem=Igle(xvaf,trunc=10)
+mymem=IglePlot(xvaf,trunc=10)
+#mymem=Igle(xvaf,trunc=10)
+
 mymem.compute_corrs()
 mymem.set_periodic()
 mymem.compute_fe()
