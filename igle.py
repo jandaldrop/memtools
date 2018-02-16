@@ -231,7 +231,7 @@ Computes the memory kernel. If you give a nonzero value for k0, this is used at 
         if first_order is None:
             first_order=self.first_order
         if first_order and not self.first_order:
-            raise Excpetion("Please initialize in first order mode, which allows both first and second order.")
+            raise Exception("Please initialize in first order mode, which allows both first and second order.")
         if hybrid is None:
             hybrid=self.hybrid
         if hybrid and not self.first_order and not self.hybrid:
