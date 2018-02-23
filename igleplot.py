@@ -3,9 +3,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import interpolate
-from correlation import *
-from memtools import *
-from igle import *
+#from .correlation import *
+from . import *
+#from .igle import *
 
 class IglePlot(Igle):
     def __init__(self, *args, **kwargs):

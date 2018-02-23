@@ -2,12 +2,12 @@ from __future__ import print_function
 import numpy as np
 import pandas as pd
 import os.path
-from correlation import *
-from memtools import *
+#from correlation import *
+#from memtools import *
 from scipy import interpolate
 from scipy.integrate import cumtrapz
-from flist import *
-import ckernel
+#from flist import *
+#import ckernel
 
 
 import sys

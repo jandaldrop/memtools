@@ -1,10 +1,10 @@
 from __future__ import print_function
 import numpy as np
 import pandas as pd
-from igle import *
-from igleplot import *
-from correlation import *
-from flist import *
+from .igle import *
+from .igleplot import *
+from .correlation import *
+from .flist import *
 
 def ver():
     print("This is memtools version 1.09")
