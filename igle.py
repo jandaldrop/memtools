@@ -6,7 +6,7 @@ import os.path
 #from memtools import *
 from scipy import interpolate
 from scipy.integrate import cumtrapz
-#from flist import *
+from .flist import *
 #import ckernel
 
 
