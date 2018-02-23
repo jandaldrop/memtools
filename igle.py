@@ -16,10 +16,41 @@ if sys.version_info < (3,0):
     from itertools import izip as zip
 
 class Igle(object):
-    def __init__(self,xva_arg,saveall=True,prefix="",verbose=True,kT=2.494,trunc=1.,__override_time_check__=False,initial_checks=True,first_order=False,corrs_from_der=False):
+    """
+    The main class for the memory extraction, holding all data and the extracted memory kernels.
+    """
+    def __init__(self,xva_arg,saveall=True,prefix="",verbose=True,kT=2.494,trunc=1.,__override_time_check__=False,initial_checks=True,first_order=True,corrs_from_der=False):
         """
-xva_arg should be either a pandas timeseries
-or a listlike collection of them. Set xva_arg=None for load mode.
+        Create an instance of the Igle class.
+
+        Parameters
+        ----------
+        xva_arg : list, or dataFrame
+            The timeseries to analyze. It should be either a pandas timeseries
+            or a listlike collection of them. Set xva_arg=None for load mode.
+        saveall : bool, default=True
+            Whether to save all output functions.
+        prefix : str
+            Prefix for the saved output functions.
+        verbose : bool, default=True
+            Set verbosity.
+        kT : float, default=2.494
+            Numerical value for kT.
+        trunc : float, default=1.0
+            Truncate all correlation functions and the memory kernel after this
+            time value.
+        __override_time_check__ : bool, default=False
+            Override initial time check when a list of trajectories is provided.
+        initial_checks : bool, default=True
+            Do a few initial consistency checks.
+        first_order : bool, default=True
+            Use a Volterra equation of the first kind. If this option is set to
+            True, the Volterra equation of the second kind can be selected in
+            the compute_kernel function. If it is set to False, only the Volerra
+            equation of the second kind is used.
+        corrs_from_der : bool, default=False
+            Calculate correlation functions from derivatives of the velocity acf.
+            (Do not use.)
         """
         if xva_arg is not None:
             if isinstance(xva_arg,pd.DataFrame):
@@ -91,6 +122,17 @@ or a listlike collection of them. Set xva_arg=None for load mode.
                         raise Exception("Index mismatch.")
 
     def set_periodic(self,x0=-180,x1=180):
+        """
+        Set periodic boundary conditions.
+
+        Parameters
+        ----------
+        x0 : float, default=-180
+            Lower interval bound.
+
+        x1 : float, default=180
+            Upper interval bound.
+        """
         if self.verbose:
             if not self.fe_spline is None:
                 print("Reset free energy.")
@@ -117,7 +159,22 @@ or a listlike collection of them. Set xva_arg=None for load mode.
             print("Found mass:", self.mass)
 
     def compute_fe(self, bins="auto", fehist=None, _dont_save_hist=False):
-        '''Computes the free energy. If you run into memory problems, you can provide an histogram.'''
+        '''
+        Computes the free energy from the trajectoy and prepares the cubic spline
+        interpolation. You can alternatively provide an histogram.
+
+        Parameters
+        ----------
+
+        bins : str, or int, default="auto"
+            The number of bins. It is passed to the numpy.histogram routine,
+            see its documentation for details.
+        fehist : list, default=None
+            Provide a (precomputed) histogram in the format as returned by
+            numpy.histogram.
+        _dont_save_hist : bool, default=False
+            Do not save the histogram.
+        '''
         if self.verbose:
             print ("Calculate histogram...")
 
@@ -168,6 +225,15 @@ or a listlike collection of them. Set xva_arg=None for load mode.
 
 
     def set_harmonic_u_corr(self,K=0.):
+    """
+    Set an harmonic potential (instead of calculating the free energy.)
+
+    Parameters
+    ----------
+
+    K : float, default=0
+        Potential strength.
+    """
         if self.corrs is None:
             raise Exception("Please calculate correlation functions first.")
         if K==0.:
@@ -183,6 +249,15 @@ or a listlike collection of them. Set xva_arg=None for load mode.
         self.compute_u_corr(*args, **kwargs)
 
     def compute_u_corr(self, edge_order=2):
+        """
+        Compute the correlation function(s) including the potential.
+
+        Parameters
+        ----------
+
+        edge_order : int, default=2
+            egde_order used by numpy.gradient (only relevant for corrs_from_der=True).
+        """
         if self.fe_spline is None:
             raise Exception("Free energy has not been computed.")
         if self.verbose:
@@ -228,6 +303,16 @@ or a listlike collection of them. Set xva_arg=None for load mode.
             self.ucorr.to_csv(self.prefix+self.ucorrfile,sep=" ")
 
     def compute_corrs(self, edge_order=2):
+        """
+        Compute correlation functions without the potential.
+
+        Parameters
+        ----------
+
+        edge_order : int, default=2
+            egde_order used by numpy.gradient (only relevant for corrs_from_der=True).
+        """
+
         if self.verbose:
             print("Calculate vv, va and aa correlation functions...")
 
@@ -267,7 +352,18 @@ or a listlike collection of them. Set xva_arg=None for load mode.
 
     def compute_kernel(self, first_order=None, k0=0.):
         """
-Computes the memory kernel. If you give a nonzero value for k0, this is used at time zero, if set to 0, the C-routine will calculate k0 from the second order memory equation.
+        Computes the memory kernel.
+
+        Parameters
+        ----------
+        first_order : bool, default=None
+            Choose whether the Volterra equation of the first kind (and not of
+            the second kind) is used. Only works when first_order=True was set
+            on initialization.
+
+        k0 : float, default=0.
+            If you give a nonzero value for k0, this is used at time zero, if set to 0,
+            the C-routine will calculate k0 from the second order memory equation.
         """
         if first_order is None:
             first_order=self.first_order
@@ -326,6 +422,15 @@ Computes the memory kernel. If you give a nonzero value for k0, this is used at 
         return yi
 
     def load(self, prefix=None):
+        """
+        Load saved data from disc.
+
+        Parameters
+        ----------
+
+        prefix : str, default=None
+            Prefix for the filenames.
+        """
         if prefix is None:
             prefix=self.prefix
 
