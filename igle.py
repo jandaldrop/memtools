@@ -25,7 +25,8 @@ class Igle(object):
 
         Parameters
         ----------
-        xva_arg : list, or dataFrame
+        xva_arg : pandas dataframe ()['t', 'x', 'v', 'a']) or list of dataframes.
+            Use compute_va() or see its output for format details.
             The timeseries to analyze. It should be either a pandas timeseries
             or a listlike collection of them. Set xva_arg=None for load mode.
         saveall : bool, default=True

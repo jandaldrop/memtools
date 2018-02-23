@@ -7,10 +7,28 @@ from .correlation import *
 from .flist import *
 
 def ver():
-    print("This is memtools version 1.09")
+    print("This is memtools version 1.1")
 
 
 def xframe(x, time, round_time=1.e-4, fix_time=True, dt=-1):
+    """
+    Creates a pandas dataframe (['t', 'x']) from a trajectory. Currently the time
+    is saved twice, as an index and as a separate field.
+
+    Parameters
+    ----------
+    x : numpy array
+        The time series.
+    time : numpy array
+        The respective time values.
+    round_time : float, default=1.e-4
+        When fix_time is set times are rounded to this value.
+    fix_time : bool, default=True
+        Round first timestep to round_time precision and replace times.
+    dt : float, default=-1
+        When positive, this value is used for fixing the time instead of
+        the first timestep.
+    """
     x=np.asarray(x)
     time=np.asarray(time)
     if fix_time:
@@ -22,6 +40,13 @@ def xframe(x, time, round_time=1.e-4, fix_time=True, dt=-1):
     return df
 
 def compute_a(xvf):
+    """
+    Computes the acceleration from a data frame with ['t', 'x', 'v'].
+
+    Parameters
+    ----------
+    xvf : pandas dataframe (['t', 'x', 'v'])
+    """
     diffs=xvf.shift(-1)-xvf.shift(1)
     dt=xvf.iloc[1]["t"]-xvf.iloc[0]["t"]
     xva=pd.DataFrame({"t":xvf["t"],"x":xvf["x"],"v":xvf["v"],"a":diffs["v"]/(2.*dt)},index=xvf.index)
@@ -31,6 +56,21 @@ def compute_a(xvf):
     return xva.dropna()
 
 def compute_va(xf, correct_jumps=False, jump=360, jump_thr=270):
+    """
+    Computes velocity and acceleration from a data frame with ['t', 'x'] as
+    returned by xframe.
+
+    Parameters
+    ----------
+    xf : pandas dataframe (['t', 'x'])
+
+    correct_jumps : bool, default=False
+        Jumps in the trajectory are removed (relevant for periodic data).
+    jump : float, default=360
+        The size of a jump.
+    jump_thr : float, default=270
+        Threshold for jump detection.
+    """
     diffs=xf-xf.shift(1)
     dt=xf.iloc[1]["t"]-xf.iloc[0]["t"]
     if correct_jumps:
