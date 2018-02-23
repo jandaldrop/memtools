@@ -226,15 +226,15 @@ class Igle(object):
 
 
     def set_harmonic_u_corr(self,K=0.):
-    """
-    Set an harmonic potential (instead of calculating the free energy.)
+        """
+        Set an harmonic potential (instead of calculating the free energy.)
 
-    Parameters
-    ----------
+        Parameters
+        ----------
 
-    K : float, default=0
-        Potential strength.
-    """
+        K : float, default=0
+            Potential strength.
+        """
         if self.corrs is None:
             raise Exception("Please calculate correlation functions first.")
         if K==0.:
