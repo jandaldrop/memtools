@@ -7,6 +7,9 @@ from .correlation import *
 from .flist import *
 
 def ver():
+    """
+    Show the module version.
+    """
     print("This is memtools version 1.1")
 
 
