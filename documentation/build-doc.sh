@@ -1,10 +1,10 @@
 #create a basic documentation using pydoc
 
 source_files_to_document="""
-../__init__.py
-../igle.py
-../igleplot.py
-../flist.py
+../memtools/__init__.py
+../memtools/igle.py
+../memtools/igleplot.py
+../memtools/flist.py
 """
 
 cat _header.txt $source_files_to_document | grep -v __future__ | grep -v 'from .' >> memtools_documentation.py

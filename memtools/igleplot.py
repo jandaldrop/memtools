@@ -9,7 +9,7 @@ from .igle import *
 
 class IglePlot(Igle):
     """
-    A class derived from Igle, where all relevant functions are plotted.
+    A class derived from Igle, where all relevant functions are plotted (using matplotlib).
     It is very useful for explorative analysis in jupyter notebooks.
     All arguments are passed to Igle, so for documentation and Tab completion
     please refer to the Igle class.
