@@ -2,13 +2,12 @@ from __future__ import print_function
 import numpy as np
 import pandas as pd
 import os.path
-#from correlation import *
-#from memtools import *
+from . import *
+from .correlation import *
 from scipy import interpolate
 from scipy.integrate import cumtrapz
 from .flist import *
-#import ckernel
-
+from .ckernel import *
 
 import sys
 if sys.version_info < (3,0):
@@ -393,9 +392,9 @@ class Igle(object):
         kernel=np.zeros(len(v_acf))
 
         if first_order:
-            ckernel.ckernel_first_order_core(v_acf,va_cf*self.mass,a_acf*self.mass,vu_cf,au_cf,dt,k0,kernel)
+            ckernel_first_order_core(v_acf,va_cf*self.mass,a_acf*self.mass,vu_cf,au_cf,dt,k0,kernel)
         else:
-            ckernel.ckernel_core(v_acf,va_cf,a_acf*self.mass,au_cf,dt,k0,kernel)
+            ckernel_core(v_acf,va_cf,a_acf*self.mass,au_cf,dt,k0,kernel)
 
 
         ikernel=cumtrapz(kernel,dx=dt,initial=0.)

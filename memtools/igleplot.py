@@ -3,9 +3,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import interpolate
-#from .correlation import *
-#from . import *
+from . import *
+from .correlation import *
 from .igle import *
+
+
 
 class IglePlot(Igle):
     """
