@@ -4,3 +4,4 @@ build/
 *.so
 *.pyc
 .DS*
+.ipynb_checkpoints/
