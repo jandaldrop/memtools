@@ -10,10 +10,10 @@ def ver():
     """
     Show the module version.
     """
-    print("This is memtools version 1.1")
+    print("This is memtools version 1.11")
 
 
-def xframe(x, time, round_time=1.e-4, fix_time=True, dt=-1):
+def xframe(x, time, fix_time=False, round_time=1.e-4, dt=-1):
     """
     Creates a pandas dataframe (['t', 'x']) from a trajectory. Currently the time
     is saved twice, as an index and as a separate field.
@@ -24,10 +24,10 @@ def xframe(x, time, round_time=1.e-4, fix_time=True, dt=-1):
         The time series.
     time : numpy array
         The respective time values.
+    fix_time : bool, default=False
+        Round first timestep to round_time precision and replace times.
     round_time : float, default=1.e-4
         When fix_time is set times are rounded to this value.
-    fix_time : bool, default=True
-        Round first timestep to round_time precision and replace times.
     dt : float, default=-1
         When positive, this value is used for fixing the time instead of
         the first timestep.
@@ -37,7 +37,8 @@ def xframe(x, time, round_time=1.e-4, fix_time=True, dt=-1):
     if fix_time:
         if dt<0:
             dt=np.round((time[1]-time[0])/round_time)*round_time
-        time=np.linspace(0.,dt*x.size,x.size)
+        time=np.linspace(0.,dt*(x.size-1),x.size)
+        time[1]=dt
     df = pd.DataFrame({"t":time.ravel(),"x":x.ravel()}, index=time.ravel())
     df.index.name='#t'
     return df
