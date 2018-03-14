@@ -4,4 +4,4 @@ build/
 *.so
 *.pyc
 .DS*
-example/.ipynb_checkpoints/
+example/.ipynb_checkpoints/example-checkpoint.ipynb
