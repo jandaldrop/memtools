@@ -444,7 +444,7 @@ jump&nbsp;:&nbsp;float,&nbsp;default=360<br>
 jump_thr&nbsp;:&nbsp;float,&nbsp;default=270<br>
 &nbsp;&nbsp;&nbsp;&nbsp;Threshold&nbsp;for&nbsp;jump&nbsp;detection.</tt></dd></dl>
  <dl><dt><a name="-ver"><strong>ver</strong></a>()</dt><dd><tt>Show&nbsp;the&nbsp;module&nbsp;version.</tt></dd></dl>
- <dl><dt><a name="-xframe"><strong>xframe</strong></a>(x, time, round_time=0.0001, fix_time=True, dt=-1)</dt><dd><tt>is&nbsp;saved&nbsp;twice,&nbsp;as&nbsp;an&nbsp;index&nbsp;and&nbsp;as&nbsp;a&nbsp;separate&nbsp;field.<br>
+ <dl><dt><a name="-xframe"><strong>xframe</strong></a>(x, time, fix_time=False, round_time=0.0001, dt=-1)</dt><dd><tt>is&nbsp;saved&nbsp;twice,&nbsp;as&nbsp;an&nbsp;index&nbsp;and&nbsp;as&nbsp;a&nbsp;separate&nbsp;field.<br>
 &nbsp;<br>
 Parameters<br>
 ----------<br>
@@ -452,10 +452,10 @@ x&nbsp;:&nbsp;numpy&nbsp;array<br>
 &nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;time&nbsp;series.<br>
 time&nbsp;:&nbsp;numpy&nbsp;array<br>
 &nbsp;&nbsp;&nbsp;&nbsp;The&nbsp;respective&nbsp;time&nbsp;values.<br>
+fix_time&nbsp;:&nbsp;bool,&nbsp;default=False<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Round&nbsp;first&nbsp;timestep&nbsp;to&nbsp;round_time&nbsp;precision&nbsp;and&nbsp;replace&nbsp;times.<br>
 round_time&nbsp;:&nbsp;float,&nbsp;default=1.e-4<br>
 &nbsp;&nbsp;&nbsp;&nbsp;When&nbsp;fix_time&nbsp;is&nbsp;set&nbsp;times&nbsp;are&nbsp;rounded&nbsp;to&nbsp;this&nbsp;value.<br>
-fix_time&nbsp;:&nbsp;bool,&nbsp;default=True<br>
-&nbsp;&nbsp;&nbsp;&nbsp;Round&nbsp;first&nbsp;timestep&nbsp;to&nbsp;round_time&nbsp;precision&nbsp;and&nbsp;replace&nbsp;times.<br>
 dt&nbsp;:&nbsp;float,&nbsp;default=-1<br>
 &nbsp;&nbsp;&nbsp;&nbsp;When&nbsp;positive,&nbsp;this&nbsp;value&nbsp;is&nbsp;used&nbsp;for&nbsp;fixing&nbsp;the&nbsp;time&nbsp;instead&nbsp;of<br>
 &nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;first&nbsp;timestep.</tt></dd></dl>
