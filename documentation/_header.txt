@@ -3,7 +3,7 @@ memtools documentation
 ----------------------
 
 A python module for the extraction of memory kernels from trajectories in the presence of external potentials.
-See the example get-mem.py for the general usage.
+See the example example/example.ipynb for the general usage.
 
 Igle is the main class of the module, the derived class IglePlot plots all relevant functions. It is useful for explorative analysis in jupyter notebooks.
 """
