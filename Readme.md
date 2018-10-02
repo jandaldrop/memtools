@@ -1,4 +1,4 @@
-Tool suite for the computation of memory kernels from time series (requires numpy, scipy and pandas).
+Python 3 tool suite for the computation of memory kernels from time series
 
 Please read (and cite) the following reference, where the details of the algorithm are explained.
 
