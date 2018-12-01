@@ -1,10 +1,11 @@
-from __future__ import print_function
 import numpy as np
 import pandas as pd
-from .igle import *
-from .igleplot import *
-from .correlation import *
-from .flist import *
+
+from memtools.igle import Igle
+from memtools.igleplot import IglePlot
+from memtools.correlation import pdcorr
+from memtools.flist import flist
+
 
 def ver():
     """
@@ -32,16 +33,17 @@ def xframe(x, time, fix_time=False, round_time=1.e-4, dt=-1):
         When positive, this value is used for fixing the time instead of
         the first timestep.
     """
-    x=np.asarray(x)
-    time=np.asarray(time)
+    x = np.asarray(x)
+    time = np.asarray(time)
     if fix_time:
-        if dt<0:
-            dt=np.round((time[1]-time[0])/round_time)*round_time
-        time=np.linspace(0.,dt*(x.size-1),x.size)
-        time[1]=dt
-    df = pd.DataFrame({"t":time.ravel(),"x":x.ravel()}, index=time.ravel())
-    df.index.name='#t'
+        if dt < 0:
+            dt = np.round((time[1] - time[0]) / round_time) * round_time
+        time = np.linspace(0., dt * (x.size - 1), x.size)
+        time[1] = dt
+    df = pd.DataFrame({"t": time.ravel(), "x": x.ravel()}, index=time.ravel())
+    df.index.name = '#t'
     return df
+
 
 def compute_a(xvf):
     """
@@ -51,13 +53,20 @@ def compute_a(xvf):
     ----------
     xvf : pandas dataframe (['t', 'x', 'v'])
     """
-    diffs=xvf.shift(-1)-xvf.shift(1)
-    dt=xvf.iloc[1]["t"]-xvf.iloc[0]["t"]
-    xva=pd.DataFrame({"t":xvf["t"],"x":xvf["x"],"v":xvf["v"],"a":diffs["v"]/(2.*dt)},index=xvf.index)
+    diffs = xvf.shift(-1) - xvf.shift(1)
+    dt = xvf.iloc[1]["t"] - xvf.iloc[0]["t"]
+    xva = pd.DataFrame({
+        "t": xvf["t"],
+        "x": xvf["x"],
+        "v": xvf["v"],
+        "a": diffs["v"] / (2. * dt)
+    },
+                       index=xvf.index)
     xva = xva[['t', 'x', 'v', 'a']]
-    xva.index.name='#t'
+    xva.index.name = '#t'
 
     return xva.dropna()
+
 
 def compute_va(xf, correct_jumps=False, jump=360, jump_thr=270):
     """
@@ -75,17 +84,23 @@ def compute_va(xf, correct_jumps=False, jump=360, jump_thr=270):
     jump_thr : float, default=270
         Threshold for jump detection.
     """
-    diffs=xf-xf.shift(1)
-    dt=xf.iloc[1]["t"]-xf.iloc[0]["t"]
+    diffs = xf - xf.shift(1)
+    dt = xf.iloc[1]["t"] - xf.iloc[0]["t"]
     if correct_jumps:
-        diffs.loc[diffs["x"] < jump_thr,"x"]+=jump
-        diffs.loc[diffs["x"] > jump_thr,"x"]-=jump
+        diffs.loc[diffs["x"] < jump_thr, "x"] += jump
+        diffs.loc[diffs["x"] > jump_thr, "x"] -= jump
 
-    ddiffs=diffs.shift(-1)-diffs
-    sdiffs=diffs.shift(-1)+diffs
+    ddiffs = diffs.shift(-1) - diffs
+    sdiffs = diffs.shift(-1) + diffs
 
-    xva=pd.DataFrame({"t":xf["t"],"x":xf["x"],"v":sdiffs["x"]/(2.*dt),"a":ddiffs["x"]/dt**2},index=xf.index)
+    xva = pd.DataFrame({
+        "t": xf["t"],
+        "x": xf["x"],
+        "v": sdiffs["x"] / (2. * dt),
+        "a": ddiffs["x"] / dt**2
+    },
+                       index=xf.index)
     xva = xva[['t', 'x', 'v', 'a']]
-    xva.index.name='#t'
+    xva.index.name = '#t'
 
     return xva.dropna()

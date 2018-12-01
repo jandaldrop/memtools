@@ -1,12 +1,8 @@
-from __future__ import print_function
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import interpolate
-from . import *
-from .correlation import *
-from .igle import *
 
+from memtools.igle import Igle
 
 
 class IglePlot(Igle):
@@ -16,41 +12,44 @@ class IglePlot(Igle):
     All arguments are passed to Igle, so for documentation and Tab completion
     please refer to the Igle class.
     """
+
     def __init__(self, *args, **kwargs):
         super(IglePlot, self).__init__(*args, **kwargs)
-        self.plot=True
+        self.plot = True
 
     def compute_corrs(self, *args, **kwargs):
-        ret=super(IglePlot, self).compute_corrs(*args, **kwargs)
+        ret = super(IglePlot, self).compute_corrs(*args, **kwargs)
         if self.plot:
             self.plot_corrs()
         return ret
 
     def compute_au_corr(self, *args, **kwargs):
-        print("WARNING: This function has been renamed to compute_u_corr, please change.")
+        print(
+            "WARNING: This function has been renamed to compute_u_corr, please change."
+        )
         self.compute_u_corr(*args, **kwargs)
 
     def compute_u_corr(self, *args, **kwargs):
-        ret=super(IglePlot, self).compute_u_corr(*args, **kwargs)
+        ret = super(IglePlot, self).compute_u_corr(*args, **kwargs)
         if self.plot:
             self.plot_u_corr()
         return ret
 
     def compute_fe(self, *args, **kwargs):
-        ret=super(IglePlot, self).compute_fe(*args, **kwargs)
+        ret = super(IglePlot, self).compute_fe(*args, **kwargs)
         if self.plot:
             self.plot_fe()
         return ret
 
     def compute_kernel(self, *args, **kwargs):
-        ret=super(IglePlot, self).compute_kernel(*args, **kwargs)
+        ret = super(IglePlot, self).compute_kernel(*args, **kwargs)
         if self.plot:
             self.plot_kernel()
         return ret
 
     def plot_corrs(self):
         plt.figure()
-        plt.plot(self.corrs.index,self.corrs["vv"])
+        plt.plot(self.corrs.index, self.corrs["vv"])
         plt.xscale("log")
         plt.xlabel("$t$")
         plt.ylabel("$\\langle vv\\rangle$")
@@ -58,7 +57,7 @@ class IglePlot(Igle):
         plt.show(block=False)
 
         plt.figure()
-        plt.plot(self.corrs.index,self.corrs["va"])
+        plt.plot(self.corrs.index, self.corrs["va"])
         plt.xscale("log")
         plt.xlabel("$t$")
         plt.ylabel("$\\langle va\\rangle$")
@@ -66,17 +65,16 @@ class IglePlot(Igle):
         plt.show(block=False)
 
         plt.figure()
-        plt.plot(self.corrs.index,self.corrs["aa"])
+        plt.plot(self.corrs.index, self.corrs["aa"])
         plt.xscale("log")
         plt.xlabel("$t$")
         plt.ylabel("$\\langle aa\\rangle$")
         plt.title("Acceleration autocorrelation function")
         plt.show(block=False)
 
-
     def plot_u_corr(self):
         plt.figure()
-        plt.plot(self.ucorr.index,self.ucorr["au"])
+        plt.plot(self.ucorr.index, self.ucorr["au"])
         plt.xscale("log")
         plt.xlabel("$t$")
         plt.ylabel("$\\langle a\\nabla U\\rangle$")
@@ -84,7 +82,7 @@ class IglePlot(Igle):
         plt.show(block=False)
         if self.first_order:
             plt.figure()
-            plt.plot(self.ucorr.index,self.ucorr["vu"])
+            plt.plot(self.ucorr.index, self.ucorr["vu"])
             plt.xscale("log")
             plt.xlabel("$t$")
             plt.ylabel("$\\langle v\\nabla U\\rangle$")
@@ -93,13 +91,13 @@ class IglePlot(Igle):
 
     def plot_fe(self, nxfine=1000):
         plt.figure()
-        plt.plot(self.fe.index,self.fe["F"],"o")
+        plt.plot(self.fe.index, self.fe["F"], "o")
 
-        x0=self.fe.index.values[0]
-        x1=self.fe.index.values[-1]
-        xfine=np.arange(x0,x1,(x1-x0)/nxfine)
+        x0 = self.fe.index.values[0]
+        x1 = self.fe.index.values[-1]
+        xfine = np.arange(x0, x1, (x1 - x0) / nxfine)
 
-        plt.plot(xfine,interpolate.splev(xfine, self.fe_spline))
+        plt.plot(xfine, interpolate.splev(xfine, self.fe_spline))
 
         plt.xlabel("$x$")
         plt.ylabel("$F$ [kT]")
@@ -108,7 +106,7 @@ class IglePlot(Igle):
 
     def plot_kernel(self):
         plt.figure()
-        plt.plot(self.kernel.index,self.kernel["k"])
+        plt.plot(self.kernel.index, self.kernel["k"])
         plt.xscale("log")
         plt.xlabel("$t$")
         plt.ylabel("$\\Gamma$")
